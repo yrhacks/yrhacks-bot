@@ -9,7 +9,7 @@ export const command: Command = {
   requiredPerms: [],
   requiresSetup: true,
   execute: async (_client, msg, _args, db): Promise<void> => {
-    if (msg.channel.type !== "GUILD_TEXT") {
+    if (msg.channel.type !== "text") {
       return;
     }
     const { channel } = msg;
@@ -30,7 +30,7 @@ export const command: Command = {
       && member !== null
       && member.roles.cache.has(db.roles.participant)
     ) {
-      await channel.permissionOverwrites.edit(member, {
+      await channel.createOverwrite(member, {
         VIEW_CHANNEL: true,
         SEND_MESSAGES: true,
       });

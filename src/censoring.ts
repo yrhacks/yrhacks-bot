@@ -10,8 +10,7 @@ export const registerCensoring = (bot: Client): void => {
       return;
     }
     if (
-      msg.member !== null
-      && msg.member.permissions.has(Permissions.FLAGS.MANAGE_MESSAGES)
+      msg.member.hasPermission(Permissions.FLAGS.MANAGE_MESSAGES)
       && msg.content.startsWith(`${config.prefix}word_unban`)
     ) {
       // kinda sketchy, admins exempt to do !wordunban <bannedword>
@@ -27,7 +26,7 @@ export const registerCensoring = (bot: Client): void => {
     for (const word of config.wordlist) {
       if (content.includes(word)) {
         matchedWord = word;
-        await msg.delete();
+        await msg.delete({ reason: `Found inappropriate word: ${word}` });
         await msg.reply("watch your language.");
         break;
       }
@@ -45,12 +44,12 @@ export const registerCensoring = (bot: Client): void => {
       return;
     }
 
-    await channel.send({embeds: [new MessageEmbed({
+    await channel.send(new MessageEmbed({
       title: "Wordlist Match",
       author: {
         name: makeUserString(msg.author),
       },
-      description: `In ${msg.channel.toString()}:\n${msg.content}`,
+      description: `In ${mention(msg.channel)}:\n${msg.content}`,
       fields: [
         {
           name: "Matched content:",
@@ -62,6 +61,6 @@ export const registerCensoring = (bot: Client): void => {
       footer: {
         text: msg.id,
       },
-    })]});
+    }));
   });
 };

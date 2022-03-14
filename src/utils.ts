@@ -4,14 +4,14 @@ import { Command } from "./command";
 import { config } from "./config";
 import { getCode } from "./db";
 
-// export class GuildMessage extends Message {
-//   // copy of Message but with guild and member
-//   // overridden to be non-null
-//   public override readonly guild!: Guild;
-//   public override readonly member!: GuildMember;
-// }
+export class GuildMessage extends Message {
+  // copy of Message but with guild and member
+  // overridden to be non-null
+  public override readonly guild!: Guild;
+  public override readonly member!: GuildMember;
+}
 
-export const isGuildMessage = (msg: Message): msg is Message =>
+export const isGuildMessage = (msg: Message): msg is GuildMessage =>
   msg.guild !== null && msg.member !== null;
 
 export const makeUserString = (user: User | string): string => {
@@ -38,12 +38,12 @@ export const sendCommandFeedback = async (
   command: Command,
   fields: EmbedFieldData[],
 ): Promise<void> => {
-  await msg.channel.send({embeds: [new MessageEmbed({
+  await msg.channel.send(new MessageEmbed({
     description: `${mention(msg.author)} **${config.prefix}${command.name}**`,
     fields,
     timestamp: Date.now(),
     footer: {
       text: msg.id,
     },
-  })]});
+  }));
 };

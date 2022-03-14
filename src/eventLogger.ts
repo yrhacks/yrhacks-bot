@@ -157,12 +157,12 @@ export const registerEventLogging = (bot: Client): void => {
     }
   });
   bot.on("guildMemberRemove", async (member): Promise<void> => {
-    await log.send({embeds: [new MessageEmbed({
+    await log.send(new MessageEmbed({
       title: "Member Left/Kicked",
       author: {
         name: makeUserString(member.partial ? member.id : member.user),
       },
-    })]});
+    }));
   });
   bot.on("guildBanAdd", async (eventGuild, user): Promise<void> => {
     if (eventGuild.id !== guild.id) {
