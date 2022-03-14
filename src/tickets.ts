@@ -1,3 +1,4 @@
+import { ColorResolvable } from "discord.js";
 import { config } from "./config";
 import { onChannelReaction } from "./reactions";
 
@@ -31,7 +32,7 @@ export const registerMentorTickets = (): void => {
         });
 
         if (embed.hexColor === config.ticketColours.new) {
-          await msg.edit(embed.setColor(config.ticketColours.old));
+          await msg.edit({embeds: [embed.setColor(config.ticketColours.old as ColorResolvable)]});
         }
       } else {
         if (reaction.count === null) {
@@ -39,7 +40,7 @@ export const registerMentorTickets = (): void => {
           return;
         }
         if (reaction.count <= 1) {
-          await msg.edit(embed.setColor(config.ticketColours.new));
+          await msg.edit({embeds: [embed.setColor(config.ticketColours.new)]});
         }
 
         const overwrite = channel.permissionOverwrites.get(user.id);

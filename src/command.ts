@@ -65,7 +65,7 @@ export const registerCommands = (bot: Client): void => {
       return;
     }
 
-    if (!msg.member.hasPermission(command.requiredPerms)) {
+    if (!msg.member.permissions.has(command.requiredPerms)) {
       return;
     }
 
