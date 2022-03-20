@@ -1,6 +1,6 @@
 import axios from "axios";
 import crypto from "crypto";
-import { Client } from "discord.js";
+import { Client, Guild } from "discord.js";
 import fs from "fs";
 import path from "path";
 
@@ -43,7 +43,7 @@ export const registerMessageLogging = (bot: Client): void => {
     stream.write(`${JSON.stringify({
       id: msg.id,
       author: makeUserString(msg.author),
-      guild: msg.guild.id,
+      guild: (msg.guild as Guild).id,
       channel: msg.channel.id,
       content: msg.content,
       attachments,

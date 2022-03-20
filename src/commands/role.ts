@@ -1,4 +1,4 @@
-import { EmbedFieldData } from "discord.js";
+import { EmbedFieldData, Role } from "discord.js";
 
 import { Command } from "../command";
 import { sendCommandFeedback } from "../utils";
@@ -23,7 +23,7 @@ export const command: Command = {
     }
 
     const names = args.concat(
-      mentions.roles.array().map((role): string => role.name),
+      mentions.roles.map((role: Role): string => role.name),
     );
 
     const add: string[] = [];

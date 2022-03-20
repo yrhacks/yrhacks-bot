@@ -1,4 +1,4 @@
-import { Client } from "discord.js";
+import { Client, TextChannel } from "discord.js";
 import fs from "fs";
 
 import { config, readJson, readJsonSchema } from "./config";
@@ -16,7 +16,7 @@ interface Participant {
   url: string;
 }
 
-const bot = new Client();
+const bot = new Client({intents: []});
 
 bot.on("ready", async (): Promise<void> => {
   console.log("logged in generateInvites");
@@ -45,7 +45,7 @@ bot.on("ready", async (): Promise<void> => {
   const result: { [code: string]: Participant } = { };
 
   for (const participant of data) {
-    const invite = await isolation.createInvite({
+    const invite = await (isolation as TextChannel).createInvite({
       maxAge: 0,
       maxUses: 1,
       unique: true,

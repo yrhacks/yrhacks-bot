@@ -1,4 +1,4 @@
-import { Client, Presence, MessageEmbed } from "discord.js";
+import { Client, Presence, MessageEmbed, GuildManager, GuildMember, User } from "discord.js";
 
 import { config } from "./config";
 import { fetchChannel, fetchGuild } from "./db";
@@ -24,8 +24,8 @@ export const registerIsolation = (bot: Client): void => {
     }
 
     let fields;
-    for (const activity of user.presence.activities) {
-      if (activity.type === "CUSTOM_STATUS" && activity.state !== null) {
+    for (const activity of ((await guild.members.fetch(user.id)).presence as Presence).activities) {
+      if (activity.type === "CUSTOM" && activity.state !== null) {
         fields = [
           {
             name: "Status:",
@@ -64,7 +64,7 @@ export const registerIsolation = (bot: Client): void => {
       if (content.match(/^[0-9]+$/) === null) {
         return;
       }
-      const member = msg.guild.member(content);
+      const member = await msg.guild.members.fetch(content);
       if (member === null) {
         return;
       }

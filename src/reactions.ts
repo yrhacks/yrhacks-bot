@@ -1,4 +1,4 @@
-import { Client, MessageReaction, PartialUser, User } from "discord.js";
+import { Client, Message, MessageReaction, PartialUser, User } from "discord.js";
 
 import { DbGuildInfo, fetchGuild } from "./db";
 import { GuildMessage, isGuildMessage } from "./utils";
@@ -42,10 +42,10 @@ const handle = async (
   if (msg.partial) {
     await msg.fetch();
   }
-  if (!isGuildMessage(msg)) {
+  if (!isGuildMessage(msg as Message)) {
     return;
   }
-  if (msg.author.id !== bot.user?.id) {
+  if ((msg.author as User).id !== bot.user?.id) {
     return;
   }
   if (msg.channel.type !== "GUILD_TEXT") {
@@ -74,6 +74,10 @@ const handle = async (
 };
 
 export const registerReactions = (bot: Client): void => {
-  bot.on("messageReactionAdd", handle.bind(undefined, "add", bot));
-  bot.on("messageReactionRemove", handle.bind(undefined, "remove", bot));
+  bot.on("messageReactionAdd", () => {
+    handle.bind(undefined, "add", bot)
+  });
+  bot.on("messageReactionRemove", () => {
+    handle.bind(undefined, "remove", bot)
+  });
 };

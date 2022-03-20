@@ -26,7 +26,7 @@ export const registerMentorTickets = (): void => {
           return;
         }
 
-        await channel.createOverwrite(member, {
+        await (channel as GuildChannel).permissionOverwrites.create(member, {
           VIEW_CHANNEL: true,
           SEND_MESSAGES: true,
         });

@@ -1,4 +1,4 @@
-import { Client } from "discord.js";
+import { BaseGuildTextChannel, Client } from "discord.js";
 
 import { fetchGuild } from "./db";
 
@@ -24,7 +24,7 @@ bot.on("ready", async (): Promise<void> => {
     return;
   }
 
-  const invite = await isolation.createInvite({
+  const invite = await (isolation as BaseGuildTextChannel).createInvite({
     maxAge: 0,
     maxUses: 1,
     unique: true,

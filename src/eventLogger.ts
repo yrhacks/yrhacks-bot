@@ -1,4 +1,4 @@
-import { Client, MessageEmbed } from "discord.js";
+import { Client, GuildBan, GuildChannel, GuildTextBasedChannel, MessageEmbed } from "discord.js";
 
 import { fetchGuild } from "./db";
 import { makeUserString } from "./utils";
@@ -164,15 +164,15 @@ export const registerEventLogging = (bot: Client): void => {
       },
     })]});
   });
-  bot.on("guildBanAdd", async (eventGuild, user): Promise<void> => {
-    if (eventGuild.id !== guild.id) {
+  bot.on("guildBanAdd", async (eventGuild: GuildBan): Promise<void> => {
+    if (eventGuild.guild.id !== guild.id) {
       return;
     }
-    await log.send(new MessageEmbed({
+    await (log as GuildTextBasedChannel).send({embeds: [new MessageEmbed({
       title: "Member Banned",
       author: {
-        name: makeUserString(user),
+        name: makeUserString(eventGuild.user),
       },
-    }));
+    })]});
   });
 };
