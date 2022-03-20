@@ -48,7 +48,7 @@ const handle = async (
   if (msg.author.id !== bot.user?.id) {
     return;
   }
-  if (msg.channel.type !== "text") {
+  if (msg.channel.type !== "GUILD_TEXT") {
     return;
   }
   const handler = reactions.get(msg.channel.name);

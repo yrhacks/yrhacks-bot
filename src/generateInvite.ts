@@ -5,7 +5,7 @@ import { fetchGuild } from "./db";
 const guildToGenerate = process.argv[process.argv.length-1];
 console.log("generate invite for guild:", guildToGenerate);
 
-const bot = new Client();
+const bot = new Client({intents: []});
 
 bot.on("ready", async (): Promise<void> => {
   console.log("logged in generateInvite");

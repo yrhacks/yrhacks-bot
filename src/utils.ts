@@ -4,12 +4,12 @@ import { Command } from "./command";
 import { config } from "./config";
 import { getCode } from "./db";
 
-// export class GuildMessage extends Message {
-//   // copy of Message but with guild and member
-//   // overridden to be non-null
-//   public override readonly guild!: Guild;
-//   public override readonly member!: GuildMember;
-// }
+export class GuildMessage extends Message {
+  // copy of Message but with guild and member
+  // overridden to be non-null
+  public override readonly guild!: Guild;
+  public override readonly member!: GuildMember;
+}
 
 export const isGuildMessage = (msg: Message): msg is Message =>
   msg.guild !== null && msg.member !== null;
