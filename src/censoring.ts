@@ -35,7 +35,6 @@ export const registerCensoring = (bot: Client): void => {
     if (matchedWord === undefined) {
       return;
     }
-
     const db = fetchGuild(msg.guild);
     if (db === undefined) {
       return;

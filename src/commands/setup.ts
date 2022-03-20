@@ -1,4 +1,4 @@
-import { Channel, OverwriteData, Role } from "discord.js";
+import { Channel, ColorResolvable, OverwriteData, PermissionResolvable, Role } from "discord.js";
 import fp from "lodash/fp";
 const { set } = fp;
 
@@ -23,7 +23,7 @@ const makeOverwrites = (
       } else {
         data.push({
           id: role,
-          allow: overwrite.allow,
+          allow: overwrite.allow as PermissionResolvable,
           type: "role",
         });
       }
@@ -71,14 +71,11 @@ export const command: Command = {
 
     for (const role of config.roles) {
       const roleObj = await roles.create({
-        data: {
-          name: role.name,
-          color: role.color,
-          hoist: role.hoist ?? false,
-          permissions: role.permissions,
-          mentionable: role.mentionable ?? false,
-        },
-        reason: "Bot setup command",
+        name: role.name,
+        color: role.color as ColorResolvable,
+        hoist: role.hoist ?? false,
+        permissions: role.permissions as PermissionResolvable,
+        mentionable: role.mentionable ?? false,
       });
       roleMap.set(role.name, roleObj);
     }
@@ -94,7 +91,7 @@ export const command: Command = {
       const categoryObj = await channels.create(
         category.name,
         {
-          type: "category",
+          type: "GUILD_CATEGORY",
           permissionOverwrites: makeOverwrites(category.permissionOverwrites, roleMap),
           reason: "Bot setup command",
         },
@@ -104,7 +101,7 @@ export const command: Command = {
         const channelObj = await channels.create(
           channel.name,
           {
-            type: channel.type ?? "text",
+            type: channel.type ?? "GUILD_TEXT",
             parent: categoryObj,
             topic: channel.topic,
             permissionOverwrites: makeOverwrites(channel.permissionOverwrites, roleMap),
@@ -140,7 +137,7 @@ export const command: Command = {
       {
         verificationLevel: "LOW",
         explicitContentFilter: "ALL_MEMBERS",
-        defaultMessageNotifications: "MENTIONS",
+        defaultMessageNotifications: "ONLY_MENTIONS",
       },
       "Bot setup command",
     );

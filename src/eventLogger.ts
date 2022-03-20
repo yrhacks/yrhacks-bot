@@ -30,7 +30,7 @@ export const registerEventLogging = (bot: Client): void => {
     })]});
   });
   bot.on("presenceUpdate", async (before, after): Promise<void> => {
-    const member = guild.member(after.userId);
+    const member = await guild.members.fetch(after.userId);
     if (member === null) {
       return;
     }
@@ -41,7 +41,7 @@ export const registerEventLogging = (bot: Client): void => {
         break;
       }
     }
-    if (before !== undefined) {
+    if (before !== undefined && before !== null) {
       let beforeDescription;
       for (const activity of before.activities) {
         if (activity.type === "CUSTOM" && activity.state !== null) {

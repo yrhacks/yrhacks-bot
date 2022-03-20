@@ -1,4 +1,4 @@
-import { Client, PermissionResolvable } from "discord.js";
+import { Client, GuildMember, PermissionResolvable } from "discord.js";
 import fs from "fs";
 
 import { config } from "./config";
@@ -65,7 +65,7 @@ export const registerCommands = (bot: Client): void => {
       return;
     }
 
-    if (!msg.member.permissions.has(command.requiredPerms)) {
+    if (!(msg.member as GuildMember).permissions.has(command.requiredPerms)) {
       return;
     }
 
@@ -74,9 +74,9 @@ export const registerCommands = (bot: Client): void => {
       if (db === undefined) {
         return;
       }
-      await command.execute(bot, msg, args, db);
+      await command.execute(bot, msg as GuildMessage, args, db);
     } else {
-      await command.execute(bot, msg, args, undefined);
+      await command.execute(bot, msg as GuildMessage, args, undefined);
     }
   });
 };

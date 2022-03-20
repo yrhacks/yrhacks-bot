@@ -67,7 +67,8 @@ export const initGuild = async (guild: Guild): Promise<void> => {
   await guildDb.write(set("tickets", { }));
 };
 
-export const fetchGuild = (guild: Guild): DbGuildInfo | undefined => {
+export const fetchGuild = (guild: Guild | null): DbGuildInfo | undefined => {
+  if (guild === null) return;
   const guildDb = db.getState()[guild.id];
   if (guildDb === undefined) {
     console.warn(`guild ${guild.id} (${guild.name}) not setup properly`);
@@ -121,15 +122,16 @@ export const removeTicket = async (
 };
 
 export const fetchChannel = (
-  guild: Guild,
+  guild: Guild | null,
   id: string,
 ): GuildChannel | undefined => {
+  if (guild === null) return; 
   const channel = guild.channels.resolve(id);
   if (channel === null) {
     console.warn(`channel ${id} is not in the right guild ${guild.id}`);
     return undefined;
   }
-  return channel;
+  return channel as GuildChannel;
 };
 
 export const getUsers = (): DbUserInfo => dbUser.getState();

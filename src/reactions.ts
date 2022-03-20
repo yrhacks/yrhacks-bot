@@ -70,7 +70,7 @@ const handle = async (
   }
 
   // user already fetched
-  await handler.handle(kind, reaction, user as User, msg, db);
+  await handler.handle(kind, reaction, user as User, msg as GuildMessage, db);
 };
 
 export const registerReactions = (bot: Client): void => {
