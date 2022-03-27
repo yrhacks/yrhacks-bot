@@ -9,7 +9,7 @@ import { isGuildMessage, makeUserString } from "./utils";
 export const registerMessageLogging = (bot: Client): void => {
   let currentFile = 835221;
   let stream = fs.createWriteStream(`logs/${currentFile}.json`, { flags: "a" });
-  stream.write("[");
+  // stream.write("[");
 
   bot.on("messageCreate", async (msg): Promise<void> => {
     if (!isGuildMessage(msg)) {
@@ -17,12 +17,6 @@ export const registerMessageLogging = (bot: Client): void => {
     }
 
     const name = msg.id.substr(0, 6);
-    if (Number(name) > currentFile) {
-      stream.end("]", (): void => { console.log("done"); });
-      currentFile = Number(name);
-      stream = fs.createWriteStream(`logs/${currentFile}.json`, { flags: "a" });
-      stream.write("[");
-    }
 
     const attachments: Array<{ url: string; file: string }> = [];
     for (const attachment of msg.attachments.values()) {

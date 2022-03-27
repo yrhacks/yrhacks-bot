@@ -60,23 +60,19 @@ export const registerIsolation = (bot: Client): void => {
       if (kind === "remove") {
         return;
       }
-      console.log("here10");
       const { content } = msg;
       if (content.match(/^[0-9]+$/) === null) {
         return;
       }
-      console.log("here11");
       const member = await msg.guild.members.fetch(content);
       if (member === null) {
         return;
       }
-      console.log("here12");
       if (member.roles.highest.id !== msg.guild.roles.everyone.id) {
         await msg.edit(`${content} - User already has roles`);
         await msg.reactions.removeAll();
         return;
       }
-      console.log("here13");
       const reason = `${content} - Approved by ${mention(user)}`;
       await member.roles.add(db.roles.pending, reason);
       await msg.edit(reason);

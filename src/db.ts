@@ -168,10 +168,8 @@ export const getUsers = async (): Promise<DbUserInfo> => {
       users: {},
       codes: {},
     };
-    console.log(`bruh ${JSON.stringify(dbUser.data)}`);
     await dbUser.write();
   }
-  console.log(`bruh2 ${JSON.stringify(dbUser.data)}`);
   return dbUser.data;
 };
 
@@ -184,6 +182,5 @@ export const addUser = async (code: string, user: string): Promise<void> => {
 
 export const getCode = async (id: string): Promise<string | undefined> => {
   const userDb = await getUsers();
-  console.log(`bruh3 ${JSON.stringify(userDb)}`);
   return userDb.users[id];
 }

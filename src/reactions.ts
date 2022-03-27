@@ -35,7 +35,6 @@ const handle = async (
   reaction: MessageReaction | PartialMessageReaction,
   user: User | PartialUser,
 ): Promise<void> => {
-  console.log("huh?");
   if (reaction.partial) {
     await reaction.fetch();
   }
@@ -51,44 +50,35 @@ const handle = async (
     // satisfy typescript Message | PartialMessage union
     return;
   }
-  console.log("here1");
   if (!isGuildMessage(msg)) {
     return;
   }
-  console.log("here2");
   if (msg.author.id !== bot.user?.id) {
     return;
   }
-  console.log("here3");
   if (msg.channel.type !== "GUILD_TEXT") {
     return;
   }
-  console.log("here4");
   const handler = reactions.get(msg.channel.name);
   if (handler === undefined) {
     return;
   }
-  console.log("here5");
   if (reaction.emoji.name !== handler.emoji) {
     return;
   }
-  console.log("here6");
   if (user.partial) {
     await user.fetch();
   }
   if (user.partial) {
     return;
   }
-  console.log("here7");
   if (user.id === bot.user?.id) {
     return;
   }
-  console.log("here8");
   const db = await fetchGuild(msg.guild);
   if (db === undefined) {
     return;
   }
-  console.log("here9");
 
   // user already fetched
   await handler.handle(kind, reaction, user, msg, db);
