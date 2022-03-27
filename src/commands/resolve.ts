@@ -8,7 +8,7 @@ export const command: Command = {
   requiredPerms: [],
   requiresSetup: true,
   execute: async (_client, msg, _args, db): Promise<void> => {
-    if (msg.channel.type !== "text") {
+    if (msg.channel.type !== "GUILD_TEXT") {
       return;
     }
     const { channel } = msg;
@@ -32,7 +32,7 @@ export const command: Command = {
       return;
     }
 
-    await tickets.messages.delete(msgId, `Marked resolved by ${msg.id}`);
+    await tickets.messages.delete(msgId);
     await removeTicket(msg.guild, channel.id, msgId);
   },
 };

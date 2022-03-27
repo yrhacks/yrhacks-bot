@@ -1,10 +1,8 @@
-import { Channel, OverwriteData, Role } from "discord.js";
-import fp from "lodash/fp";
-const { set } = fp;
+import { Channel, ColorResolvable, OverwriteData, PermissionResolvable, Role } from "discord.js";
 
 import { Command } from "../command";
 import { config, OverwriteConfig } from "../config";
-import { db, initGuild } from "../db";
+import { DbRolesInfo, DbChannelsInfo, initGuild } from "../db";
 
 const makeOverwrites = (
   overwrites: OverwriteConfig[] | undefined,
@@ -23,7 +21,7 @@ const makeOverwrites = (
       } else {
         data.push({
           id: role,
-          allow: overwrite.allow,
+          allow: overwrite.allow as PermissionResolvable,
           type: "role",
         });
       }
@@ -45,8 +43,6 @@ export const command: Command = {
 
     const { guild } = msg;
     const { roles, channels } = guild;
-
-    await initGuild(guild);
 
     const roleMap: Map<string, Role> = new Map();
     const channelMap: Map<string, Channel> = new Map();
@@ -71,14 +67,11 @@ export const command: Command = {
 
     for (const role of config.roles) {
       const roleObj = await roles.create({
-        data: {
-          name: role.name,
-          color: role.color,
-          hoist: role.hoist ?? false,
-          permissions: role.permissions,
-          mentionable: role.mentionable ?? false,
-        },
-        reason: "Bot setup command",
+        name: role.name,
+        color: role.color as ColorResolvable,
+        hoist: role.hoist ?? false,
+        permissions: role.permissions as PermissionResolvable,
+        mentionable: role.mentionable ?? false,
       });
       roleMap.set(role.name, roleObj);
     }
@@ -94,7 +87,7 @@ export const command: Command = {
       const categoryObj = await channels.create(
         category.name,
         {
-          type: "category",
+          type: "GUILD_CATEGORY",
           permissionOverwrites: makeOverwrites(category.permissionOverwrites, roleMap),
           reason: "Bot setup command",
         },
@@ -104,7 +97,7 @@ export const command: Command = {
         const channelObj = await channels.create(
           channel.name,
           {
-            type: channel.type ?? "text",
+            type: channel.type ?? "GUILD_TEXT",
             parent: categoryObj,
             topic: channel.topic,
             permissionOverwrites: makeOverwrites(channel.permissionOverwrites, roleMap),
@@ -115,20 +108,14 @@ export const command: Command = {
       }
     }
 
-    const rolesDb = db(`${guild.id}.roles`);
-    const channelsDb = db(`${guild.id}.channels`);
-    const writes: Array<Promise<unknown>> = [];
+    const roleIds = Array.from(roleMap.entries(), ([name, role]) => [name, role.id]);
+    const channelIds = Array.from(channelMap.entries(), ([name, channel]) => [name, channel.id]);
 
-    // kind of awkward...
-    // if all we're doing is get and set maybe this isn't
-    // the best library to use
-    for (const [name, role] of roleMap) {
-      writes.push(rolesDb.write(set(name, role.id)));
-    }
-    for (const [name, channel] of channelMap) {
-      writes.push(channelsDb.write(set(name, channel.id)));
-    }
-    await Promise.all(writes);
+    await initGuild(
+      guild,
+      Object.fromEntries(roleIds) as DbRolesInfo,
+      Object.fromEntries(channelIds) as DbChannelsInfo,
+    );
 
     // set settings
 
@@ -140,7 +127,7 @@ export const command: Command = {
       {
         verificationLevel: "LOW",
         explicitContentFilter: "ALL_MEMBERS",
-        defaultMessageNotifications: "MENTIONS",
+        defaultMessageNotifications: "ONLY_MENTIONS",
       },
       "Bot setup command",
     );

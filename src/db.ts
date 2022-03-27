@@ -1,10 +1,29 @@
 import { Guild, GuildChannel, Role } from "discord.js";
 import fp from "lodash/fp";
-import FileAsync from "lowdb/adapters/FileAsync";
-import lowdb from "lowdb/lib/fp";
+// import FileAsync from "lowdb/adapters/FileAsync";
+// import lowdb from "lowdb/lib/fp";
 const { set, unset } = fp;
+import { Low, JSONFile } from "lowdb";
 
 import { config } from "./config";
+
+export type DbRolesInfo = {
+  participant: string;
+  mentor: string;
+  pending: string;
+  // role name -> id
+  [roleName: string]: string | undefined;
+}
+export type DbChannelsInfo = {
+
+  approvals: string;
+  Mentorship: string;
+  tickets: string;
+  log: string;
+  isolation: string;
+  // channel name -> id
+  [channelName: string]: string | undefined;
+}
 
 // hard to type this better since the specific roles/channels
 // will somewhat depend on config, however the rest of the
@@ -12,22 +31,8 @@ import { config } from "./config";
 // config too (e.g. access role id of the "mentor" role)
 // so not sure what to do...
 export interface DbGuildInfo {
-  roles: {
-    participant: string;
-    mentor: string;
-    pending: string;
-    // role name -> id
-    [roleName: string]: string | undefined;
-  };
-  channels: {
-    approvals: string;
-    Mentorship: string;
-    tickets: string;
-    log: string;
-    isolation: string;
-    // channel name -> id
-    [channelName: string]: string | undefined;
-  };
+  roles: DbRolesInfo;
+  channels: DbChannelsInfo;
   markerRoles: {
     [roleName: string]: string | undefined;
   };
@@ -53,24 +58,44 @@ interface DbSchema {
   [key: string]: DbGuildInfo | undefined;
 }
 
-const adapter = new FileAsync<DbSchema>(config.dbFile);
-export const db = await lowdb(adapter);
+const adapter = new JSONFile<DbSchema>(config.dbFile);
+export const db = new Low(adapter);
 
-const userAdapter = new FileAsync<DbUserInfo>(config.dbUserFile);
-export const dbUser = await lowdb(userAdapter);
+const userAdapter = new JSONFile<DbUserInfo>(config.dbUserFile);
+export const dbUser = new Low(userAdapter);
 
-export const initGuild = async (guild: Guild): Promise<void> => {
-  const guildDb = db(guild.id);
-  await guildDb.write(set("roles", { }));
-  await guildDb.write(set("channels", { }));
-  await guildDb.write(set("markerRoles", { }));
-  await guildDb.write(set("tickets", { }));
+export const initGuild = async (
+  guild: Guild,
+  roles: DbRolesInfo,
+  channels: DbChannelsInfo,
+): Promise<void> => {
+  await db.read();
+  // RIP
+  if (db.data === null) {
+    db.data ||= {
+      [guild.id]: {
+        roles,
+        channels,
+        markerRoles: {},
+        tickets: {},
+      }
+    };
+  } else {
+    db.data[guild.id] = {
+      roles,
+      channels,
+      markerRoles: {},
+      tickets: {},
+    };
+  }
+  await db.write();
 };
 
-export const fetchGuild = (guild: Guild): DbGuildInfo | undefined => {
-  const guildDb = db.getState()[guild.id];
+export const fetchGuild = async (guild: Guild): Promise<DbGuildInfo> => {
+  await db.read();
+  const guildDb = db.data?.[guild.id];
   if (guildDb === undefined) {
-    console.warn(`guild ${guild.id} (${guild.name}) not setup properly`);
+    throw new Error(`guild ${guild.id} (${guild.name}) not setup properly`);
   }
   return guildDb;
 };
@@ -88,16 +113,18 @@ export const addMarkerRole = async (
   guild: Guild,
   role: Role,
 ): Promise<void> => {
-  const rolesDb = db(`${guild.id}.markerRoles`);
-  await rolesDb.write(set(role.name, role.id));
+  const guildDb = await fetchGuild(guild);
+  guildDb.markerRoles[role.name] = role.id;
+  await db.write();
 };
 
 export const removeMarkerRole = async (
   guild: Guild,
   role: string,
 ): Promise<void> => {
-  const rolesDb = db(`${guild.id}.markerRoles`);
-  await rolesDb.write(unset(role));
+  const guildDb = await fetchGuild(guild);
+  delete guildDb.markerRoles[role];
+  await db.write();
 };
 
 export const addTicket = async (
@@ -105,9 +132,10 @@ export const addTicket = async (
   channelId: string,
   messageId: string,
 ): Promise<void> => {
-  const ticketsDb = db(`${guild.id}.tickets`);
-  await ticketsDb.write(set(channelId, messageId));
-  await ticketsDb.write(set(messageId, channelId));
+  const guildDb = await fetchGuild(guild);
+  guildDb.tickets[channelId] = messageId;
+  guildDb.tickets[messageId] = channelId;
+  await db.write();
 };
 
 export const removeTicket = async (
@@ -115,9 +143,10 @@ export const removeTicket = async (
   channelId: string,
   messageId: string,
 ): Promise<void> => {
-  const ticketsDb = db(`${guild.id}.tickets`);
-  await ticketsDb.write(unset(channelId));
-  await ticketsDb.write(unset(messageId));
+  const guildDb = await fetchGuild(guild);
+  delete guildDb.tickets[channelId];
+  delete guildDb.tickets[messageId];
+  await db.write();
 };
 
 export const fetchChannel = (
@@ -129,15 +158,32 @@ export const fetchChannel = (
     console.warn(`channel ${id} is not in the right guild ${guild.id}`);
     return undefined;
   }
-  return channel;
+  return channel as GuildChannel;
 };
 
-export const getUsers = (): DbUserInfo => dbUser.getState();
+export const getUsers = async (): Promise<DbUserInfo> => {
+  await dbUser.read();
+  if (dbUser.data === null) {
+    dbUser.data = {
+      users: {},
+      codes: {},
+    };
+    console.log(`bruh ${JSON.stringify(dbUser.data)}`);
+    await dbUser.write();
+  }
+  console.log(`bruh2 ${JSON.stringify(dbUser.data)}`);
+  return dbUser.data;
+};
 
 export const addUser = async (code: string, user: string): Promise<void> => {
-  await dbUser("codes").write(set(code, user));
-  await dbUser("users").write(set(user, code));
+  const userDb = await getUsers();
+  userDb.codes[code] = user;
+  userDb.users[user] = code;
+  await dbUser.write();
 };
 
-export const getCode = (id: string): string | undefined =>
-  dbUser.getState().users[id];
+export const getCode = async (id: string): Promise<string | undefined> => {
+  const userDb = await getUsers();
+  console.log(`bruh3 ${JSON.stringify(userDb)}`);
+  return userDb.users[id];
+}

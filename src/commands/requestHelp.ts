@@ -1,6 +1,8 @@
 import {
   CategoryChannel,
   Channel,
+  ColorResolvable,
+  Message,
   MessageEmbed,
   OverwriteData,
 } from "discord.js";
@@ -11,7 +13,7 @@ import { addTicket, fetchChannel } from "../db";
 import { disableEmbed, makeUserString, mention } from "../utils";
 
 const isCategoryChannel = (channel: Channel): channel is CategoryChannel =>
-  channel.type === "category";
+  channel.type === "GUILD_CATEGORY";
 
 const trailingMentions = /(?:<@(?:!|&|)\d+>\s*)*$/;
 
@@ -80,10 +82,12 @@ export const command: Command = {
       return;
     }
 
+    console.log("wat0");
+
     const channel = await guild.channels.create(
       topic,
       {
-        type: "text",
+        type: "GUILD_TEXT",
         parent: mentorCategory,
         permissionOverwrites: participants.map((member): OverwriteData => ({
           id: member.id,
@@ -93,28 +97,41 @@ export const command: Command = {
       },
     );
 
+    console.log("wat");
+
     const taggedDescription =
       keywords.length > 0
         ? `Search tags: ${keywords.join(" ")}\n\n${description}`
         : description;
 
+    console.log("wat2");
+
     const embed = {
       title: topic,
       description: taggedDescription,
-      color: config.ticketColours.new,
+      color: config.ticketColours.new as ColorResolvable,
       timestamp: Date.now(),
       author: {
-        name: makeUserString(msg.author),
+        name: await makeUserString(msg.author),
       },
       footer: {
         text: `${msg.id} ${channel.id}`,
       },
     };
 
-    const ticket = await tickets.send(
-      requests.join(" "),
-      new MessageEmbed(embed),
-    );
+    console.log("test");
+
+    let ticket: Message;
+    if (requests.length === 0) {
+      console.log("hi");
+      ticket = await tickets.send({embeds: [new MessageEmbed(embed)]});
+    } else {
+      console.log("hi2");
+      ticket = await tickets.send(
+        {content: requests.join(" "),
+        embeds: [new MessageEmbed(embed)]}
+      );
+    }
     await ticket.react("✅");
 
     await addTicket(guild, channel.id, ticket.id);
@@ -124,8 +141,8 @@ export const command: Command = {
 
     // will never be >2000 chars because the command name is >4 chars
     await channel.send(
-      `>>> ${description}`,
-      { disableMentions: "everyone" },
+      {content: `>>> ${description}`,
+      allowedMentions: { parse: [] }}, //TODO: does not mention anyone, only needs to not mention everyone
     );
   },
 };

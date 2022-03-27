@@ -29,7 +29,7 @@ interface ChannelConfig {
   name: string;
   permissionOverwrites?: OverwriteConfig[];
   topic?: string;
-  type?: "text" | "voice" | "news" | "store";
+  type?: "GUILD_TEXT" | "GUILD_VOICE" | "GUILD_NEWS" | "GUILD_STORE";
 }
 
 interface CategoryConfig {

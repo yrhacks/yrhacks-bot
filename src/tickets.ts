@@ -1,3 +1,4 @@
+import { ColorResolvable, GuildChannel } from "discord.js";
 import { config } from "./config";
 import { onChannelReaction } from "./reactions";
 
@@ -25,13 +26,13 @@ export const registerMentorTickets = (): void => {
           return;
         }
 
-        await channel.createOverwrite(member, {
+        await (channel as GuildChannel).permissionOverwrites.create(member, {
           VIEW_CHANNEL: true,
           SEND_MESSAGES: true,
         });
 
         if (embed.hexColor === config.ticketColours.new) {
-          await msg.edit(embed.setColor(config.ticketColours.old));
+          await msg.edit({embeds: [embed.setColor(config.ticketColours.old as ColorResolvable)]});
         }
       } else {
         if (reaction.count === null) {
@@ -39,10 +40,10 @@ export const registerMentorTickets = (): void => {
           return;
         }
         if (reaction.count <= 1) {
-          await msg.edit(embed.setColor(config.ticketColours.new));
+          await msg.edit({embeds: [embed.setColor(config.ticketColours.new as ColorResolvable)]});
         }
 
-        const overwrite = channel.permissionOverwrites.get(user.id);
+        const overwrite = (channel as GuildChannel).permissionOverwrites.cache.get(user.id);
         if (overwrite === undefined) {
           return;
         }

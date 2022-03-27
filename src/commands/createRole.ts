@@ -1,3 +1,4 @@
+import { ColorResolvable } from "discord.js";
 import { Command } from "../command";
 import { config } from "../config";
 import { addMarkerRole } from "../db";
@@ -18,14 +19,11 @@ export const command: Command = {
     for (const roleName of args) {
       if (db.markerRoles[roleName] === undefined) {
         const role = await guild.roles.create({
-          data: {
-            name: roleName,
-            color: config.markerRoleColour,
-            hoist: false,
-            permissions: [],
-            mentionable: true,
-          },
-          reason: "create_role command",
+          name: roleName,
+          color: config.markerRoleColour as ColorResolvable,
+          hoist: false,
+          permissions: [],
+          mentionable: true,
         });
         await addMarkerRole(guild, role);
       }

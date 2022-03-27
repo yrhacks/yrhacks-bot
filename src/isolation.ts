@@ -1,4 +1,4 @@
-import { Client, MessageEmbed } from "discord.js";
+import { Client, Presence, MessageEmbed, GuildManager, GuildMember, User } from "discord.js";
 
 import { config } from "./config";
 import { fetchChannel, fetchGuild } from "./db";
@@ -9,7 +9,7 @@ export const registerIsolation = (bot: Client): void => {
   bot.on("guildMemberAdd", async (member): Promise<void> => {
     const { user, guild } = member;
 
-    const db = fetchGuild(guild);
+    const db = await fetchGuild(guild);
     if (db === undefined) {
       return;
     }
@@ -24,8 +24,8 @@ export const registerIsolation = (bot: Client): void => {
     }
 
     let fields;
-    for (const activity of user.presence.activities) {
-      if (activity.type === "CUSTOM_STATUS" && activity.state !== null) {
+    for (const activity of member.presence?.activities ?? []) {
+      if (activity.type === "CUSTOM" && activity.state !== null) {
         fields = [
           {
             name: "Status:",
@@ -43,13 +43,13 @@ export const registerIsolation = (bot: Client): void => {
       },
       fields,
       author: {
-        name: makeUserString(user),
+        name: await makeUserString(user),
       },
     };
 
-    const msg = await target.send(user.id, new MessageEmbed(embed));
+    const msg = await target.send({content: user.id, embeds: [new MessageEmbed(embed)]});
     const newDescription = `User Joined\nReject with:\n**${config.prefix}deny ${msg.id} reason...**`;
-    await msg.edit(new MessageEmbed(embed).setDescription(newDescription));
+    await msg.edit({embeds: [new MessageEmbed(embed).setDescription(newDescription)]});
     await msg.react("✅");
   });
 
@@ -60,19 +60,23 @@ export const registerIsolation = (bot: Client): void => {
       if (kind === "remove") {
         return;
       }
+      console.log("here10");
       const { content } = msg;
       if (content.match(/^[0-9]+$/) === null) {
         return;
       }
-      const member = msg.guild.member(content);
+      console.log("here11");
+      const member = await msg.guild.members.fetch(content);
       if (member === null) {
         return;
       }
+      console.log("here12");
       if (member.roles.highest.id !== msg.guild.roles.everyone.id) {
         await msg.edit(`${content} - User already has roles`);
         await msg.reactions.removeAll();
         return;
       }
+      console.log("here13");
       const reason = `${content} - Approved by ${mention(user)}`;
       await member.roles.add(db.roles.pending, reason);
       await msg.edit(reason);

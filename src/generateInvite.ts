@@ -1,11 +1,11 @@
-import { Client } from "discord.js";
+import { BaseGuildTextChannel, Client, Intents } from "discord.js";
 
 import { fetchGuild } from "./db";
 
 const guildToGenerate = process.argv[process.argv.length-1];
 console.log("generate invite for guild:", guildToGenerate);
 
-const bot = new Client();
+const bot = new Client({intents: [Intents.FLAGS.GUILD_INVITES]});
 
 bot.on("ready", async (): Promise<void> => {
   console.log("logged in generateInvite");
@@ -14,7 +14,7 @@ bot.on("ready", async (): Promise<void> => {
   if (guild === null) {
     return;
   }
-  const info = fetchGuild(guild);
+  const info = await fetchGuild(guild);
   if (info === undefined) {
     return;
   }
@@ -24,7 +24,7 @@ bot.on("ready", async (): Promise<void> => {
     return;
   }
 
-  const invite = await isolation.createInvite({
+  const invite = await (isolation as BaseGuildTextChannel).createInvite({
     maxAge: 0,
     maxUses: 1,
     unique: true,

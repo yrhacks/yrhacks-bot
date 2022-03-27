@@ -1,14 +1,14 @@
-import { Client, MessageEmbed } from "discord.js";
+import { Client, GuildBan, GuildChannel, GuildTextBasedChannel, MessageEmbed } from "discord.js";
 
 import { fetchGuild } from "./db";
 import { makeUserString } from "./utils";
 
-export const registerEventLogging = (bot: Client): void => {
+export const registerEventLogging = async (bot: Client): Promise<void> => {
   const guild = bot.guilds.resolve("");
   if (guild === null) {
     return;
   }
-  const db = fetchGuild(guild);
+  const db = await fetchGuild(guild);
   if (db === undefined) {
     return;
   }
@@ -18,33 +18,33 @@ export const registerEventLogging = (bot: Client): void => {
   }
 
   bot.on("userUpdate", async (_before, after): Promise<void> => {
-    await log.send(new MessageEmbed({
+    await log.send({embeds: [new MessageEmbed({
       title: "User Update",
       timestamp: Date.now(),
       thumbnail: {
         url: after.displayAvatarURL({ dynamic: true, size: 512 }),
       },
       author: {
-        name: makeUserString(after),
+        name: await makeUserString(after),
       },
-    }));
+    })]});
   });
   bot.on("presenceUpdate", async (before, after): Promise<void> => {
-    const member = guild.member(after.userID);
+    const member = await guild.members.fetch(after.userId);
     if (member === null) {
       return;
     }
     let description;
     for (const activity of after.activities) {
-      if (activity.type === "CUSTOM_STATUS" && activity.state !== null) {
+      if (activity.type === "CUSTOM" && activity.state !== null) {
         description = activity.state;
         break;
       }
     }
-    if (before !== undefined) {
+    if (before !== undefined && before !== null) {
       let beforeDescription;
       for (const activity of before.activities) {
-        if (activity.type === "CUSTOM_STATUS" && activity.state !== null) {
+        if (activity.type === "CUSTOM" && activity.state !== null) {
           beforeDescription = activity.state;
           break;
         }
@@ -56,14 +56,14 @@ export const registerEventLogging = (bot: Client): void => {
     if (description === undefined) {
       return;
     }
-    await log.send(new MessageEmbed({
+    await log.send({embeds: [new MessageEmbed({
       title: "Status Update",
       timestamp: Date.now(),
       description,
       author: {
-        name: makeUserString(member.user),
+        name: await makeUserString(member.user),
       },
-    }));
+    })]});
   });
   bot.on("messageUpdate", async (before, after): Promise<void> => {
     try {
@@ -94,26 +94,26 @@ export const registerEventLogging = (bot: Client): void => {
     const author = authorUser === undefined ? undefined : { name: makeUserString(authorUser) };
 
     if (prev.length > 1024 || next.length > 1024) {
-      await log.send(new MessageEmbed({
+      await log.send({embeds: [new MessageEmbed({
         title: "Message Edit (Original)",
         timestamp: Date.now(),
         description: prev,
-        author,
+        author: {},
         footer: {
           text: before.id,
         },
-      }));
-      await log.send(new MessageEmbed({
+      })]});
+      await log.send({embeds: [new MessageEmbed({
         title: "Message Edit (Edited)",
         timestamp: Date.now(),
         description: next,
-        author,
+        author: {},
         footer: {
           text: after.id,
         },
-      }));
+      })]});
     } else {
-      await log.send(new MessageEmbed({
+      await log.send({embeds: [new MessageEmbed({
         title: "Message Edit",
         timestamp: Date.now(),
         fields: [
@@ -126,53 +126,53 @@ export const registerEventLogging = (bot: Client): void => {
             value: next.length > 0 ? next : "<empty>",
           },
         ],
-        author,
+        author: {},
         footer: {
           text: after.id,
         },
-      }));
+      })]});
     }
   });
   bot.on("messageDelete", async (before): Promise<void> => {
     if (before.partial) {
-      await log.send(new MessageEmbed({
+      await log.send({embeds: [new MessageEmbed({
         title: "Message Delete",
         timestamp: Date.now(),
         footer: {
           text: before.id,
         },
-      }));
+      })]});
     } else {
-      await log.send(new MessageEmbed({
+      await log.send({embeds: [new MessageEmbed({
         title: "Message Delete",
         description: before.content,
         timestamp: Date.now(),
         author: {
-          name: makeUserString(before.author),
+          name: await makeUserString(before.author),
         },
         footer: {
           text: before.id,
         },
-      }));
+      })]});
     }
   });
   bot.on("guildMemberRemove", async (member): Promise<void> => {
-    await log.send(new MessageEmbed({
+    await log.send({embeds: [new MessageEmbed({
       title: "Member Left/Kicked",
       author: {
-        name: makeUserString(member.partial ? member.id : member.user),
+        name: await makeUserString(member.partial ? member.id : member.user),
       },
-    }));
+    })]});
   });
-  bot.on("guildBanAdd", async (eventGuild, user): Promise<void> => {
-    if (eventGuild.id !== guild.id) {
+  bot.on("guildBanAdd", async (eventGuild: GuildBan): Promise<void> => {
+    if (eventGuild.guild.id !== guild.id) {
       return;
     }
-    await log.send(new MessageEmbed({
+    await (log as GuildTextBasedChannel).send({embeds: [new MessageEmbed({
       title: "Member Banned",
       author: {
-        name: makeUserString(user),
+        name: await makeUserString(eventGuild.user),
       },
-    }));
+    })]});
   });
 };
