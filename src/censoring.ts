@@ -5,7 +5,7 @@ import { fetchChannel, fetchGuild } from "./db";
 import { isGuildMessage, makeUserString, mention } from "./utils";
 
 export const registerCensoring = (bot: Client): void => {
-  bot.on("message", async (msg): Promise<void> => {
+  bot.on("messageCreate", async (msg): Promise<void> => {
     if (!msg.deletable || !isGuildMessage(msg)) {
       return;
     }
@@ -28,14 +28,14 @@ export const registerCensoring = (bot: Client): void => {
       if (content.includes(word)) {
         matchedWord = word;
         await msg.delete();
-        await msg.reply("watch your language.");
+        await msg.channel.send("watch your language.");
         break;
       }
     }
     if (matchedWord === undefined) {
       return;
     }
-    const db = fetchGuild(msg.guild);
+    const db = await fetchGuild(msg.guild);
     if (db === undefined) {
       return;
     }
@@ -47,7 +47,7 @@ export const registerCensoring = (bot: Client): void => {
     await channel.send({embeds: [new MessageEmbed({
       title: "Wordlist Match",
       author: {
-        name: makeUserString(msg.author),
+        name: await makeUserString(msg.author),
       },
       description: `In ${msg.channel.toString()}:\n${msg.content}`,
       fields: [

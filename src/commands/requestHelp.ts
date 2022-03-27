@@ -2,6 +2,7 @@ import {
   CategoryChannel,
   Channel,
   ColorResolvable,
+  Message,
   MessageEmbed,
   OverwriteData,
 } from "discord.js";
@@ -81,6 +82,8 @@ export const command: Command = {
       return;
     }
 
+    console.log("wat0");
+
     const channel = await guild.channels.create(
       topic,
       {
@@ -94,10 +97,14 @@ export const command: Command = {
       },
     );
 
+    console.log("wat");
+
     const taggedDescription =
       keywords.length > 0
         ? `Search tags: ${keywords.join(" ")}\n\n${description}`
         : description;
+
+    console.log("wat2");
 
     const embed = {
       title: topic,
@@ -105,17 +112,26 @@ export const command: Command = {
       color: config.ticketColours.new as ColorResolvable,
       timestamp: Date.now(),
       author: {
-        name: makeUserString(msg.author),
+        name: await makeUserString(msg.author),
       },
       footer: {
         text: `${msg.id} ${channel.id}`,
       },
     };
 
-    const ticket = await tickets.send(
-      {content: requests.join(" "),
-      embeds: [new MessageEmbed(embed)]}
-    );
+    console.log("test");
+
+    let ticket: Message;
+    if (requests.length === 0) {
+      console.log("hi");
+      ticket = await tickets.send({embeds: [new MessageEmbed(embed)]});
+    } else {
+      console.log("hi2");
+      ticket = await tickets.send(
+        {content: requests.join(" "),
+        embeds: [new MessageEmbed(embed)]}
+      );
+    }
     await ticket.react("✅");
 
     await addTicket(guild, channel.id, ticket.id);

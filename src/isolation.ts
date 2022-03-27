@@ -9,7 +9,7 @@ export const registerIsolation = (bot: Client): void => {
   bot.on("guildMemberAdd", async (member): Promise<void> => {
     const { user, guild } = member;
 
-    const db = fetchGuild(guild);
+    const db = await fetchGuild(guild);
     if (db === undefined) {
       return;
     }
@@ -24,7 +24,7 @@ export const registerIsolation = (bot: Client): void => {
     }
 
     let fields;
-    for (const activity of ((await guild.members.fetch(user.id)).presence as Presence).activities) {
+    for (const activity of member.presence?.activities ?? []) {
       if (activity.type === "CUSTOM" && activity.state !== null) {
         fields = [
           {
@@ -43,7 +43,7 @@ export const registerIsolation = (bot: Client): void => {
       },
       fields,
       author: {
-        name: makeUserString(user),
+        name: await makeUserString(user),
       },
     };
 
@@ -60,19 +60,23 @@ export const registerIsolation = (bot: Client): void => {
       if (kind === "remove") {
         return;
       }
+      console.log("here10");
       const { content } = msg;
       if (content.match(/^[0-9]+$/) === null) {
         return;
       }
+      console.log("here11");
       const member = await msg.guild.members.fetch(content);
       if (member === null) {
         return;
       }
+      console.log("here12");
       if (member.roles.highest.id !== msg.guild.roles.everyone.id) {
         await msg.edit(`${content} - User already has roles`);
         await msg.reactions.removeAll();
         return;
       }
+      console.log("here13");
       const reason = `${content} - Approved by ${mention(user)}`;
       await member.roles.add(db.roles.pending, reason);
       await msg.edit(reason);

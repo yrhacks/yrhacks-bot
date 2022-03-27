@@ -11,7 +11,7 @@ export const registerMessageLogging = (bot: Client): void => {
   let stream = fs.createWriteStream(`logs/${currentFile}.json`, { flags: "a" });
   stream.write("[");
 
-  bot.on("message", async (msg): Promise<void> => {
+  bot.on("messageCreate", async (msg): Promise<void> => {
     if (!isGuildMessage(msg)) {
       return;
     }

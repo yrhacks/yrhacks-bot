@@ -23,7 +23,7 @@ export const command: Command = {
     if (participant === undefined) {
       return;
     }
-    if (getUsers().codes[code] !== undefined) {
+    if ((await getUsers()).codes[code] !== undefined) {
       return;
     }
     console.log("join:", code);

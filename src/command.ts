@@ -44,7 +44,7 @@ for (const file of await fs.promises.readdir("dist/commands")) {
 }
 
 export const registerCommands = (bot: Client): void => {
-  bot.on("message", async (msg): Promise<void> => {
+  bot.on("messageCreate", async (msg): Promise<void> => {
     if (!isGuildMessage(msg)) {
       return;
     }
@@ -70,7 +70,7 @@ export const registerCommands = (bot: Client): void => {
     }
 
     if (command.requiresSetup) {
-      const db = fetchGuild(msg.guild);
+      const db = await fetchGuild(msg.guild);
       if (db === undefined) {
         return;
       }

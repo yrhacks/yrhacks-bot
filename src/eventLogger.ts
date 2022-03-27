@@ -3,12 +3,12 @@ import { Client, GuildBan, GuildChannel, GuildTextBasedChannel, MessageEmbed } f
 import { fetchGuild } from "./db";
 import { makeUserString } from "./utils";
 
-export const registerEventLogging = (bot: Client): void => {
+export const registerEventLogging = async (bot: Client): Promise<void> => {
   const guild = bot.guilds.resolve("");
   if (guild === null) {
     return;
   }
-  const db = fetchGuild(guild);
+  const db = await fetchGuild(guild);
   if (db === undefined) {
     return;
   }
@@ -25,7 +25,7 @@ export const registerEventLogging = (bot: Client): void => {
         url: after.displayAvatarURL({ dynamic: true, size: 512 }),
       },
       author: {
-        name: makeUserString(after),
+        name: await makeUserString(after),
       },
     })]});
   });
@@ -61,7 +61,7 @@ export const registerEventLogging = (bot: Client): void => {
       timestamp: Date.now(),
       description,
       author: {
-        name: makeUserString(member.user),
+        name: await makeUserString(member.user),
       },
     })]});
   });
@@ -98,7 +98,7 @@ export const registerEventLogging = (bot: Client): void => {
         title: "Message Edit (Original)",
         timestamp: Date.now(),
         description: prev,
-        author,
+        author: {},
         footer: {
           text: before.id,
         },
@@ -107,7 +107,7 @@ export const registerEventLogging = (bot: Client): void => {
         title: "Message Edit (Edited)",
         timestamp: Date.now(),
         description: next,
-        author,
+        author: {},
         footer: {
           text: after.id,
         },
@@ -126,7 +126,7 @@ export const registerEventLogging = (bot: Client): void => {
             value: next.length > 0 ? next : "<empty>",
           },
         ],
-        author,
+        author: {},
         footer: {
           text: after.id,
         },
@@ -148,7 +148,7 @@ export const registerEventLogging = (bot: Client): void => {
         description: before.content,
         timestamp: Date.now(),
         author: {
-          name: makeUserString(before.author),
+          name: await makeUserString(before.author),
         },
         footer: {
           text: before.id,
@@ -160,7 +160,7 @@ export const registerEventLogging = (bot: Client): void => {
     await log.send({embeds: [new MessageEmbed({
       title: "Member Left/Kicked",
       author: {
-        name: makeUserString(member.partial ? member.id : member.user),
+        name: await makeUserString(member.partial ? member.id : member.user),
       },
     })]});
   });
@@ -171,7 +171,7 @@ export const registerEventLogging = (bot: Client): void => {
     await (log as GuildTextBasedChannel).send({embeds: [new MessageEmbed({
       title: "Member Banned",
       author: {
-        name: makeUserString(eventGuild.user),
+        name: await makeUserString(eventGuild.user),
       },
     })]});
   });

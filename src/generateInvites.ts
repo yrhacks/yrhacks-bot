@@ -32,7 +32,7 @@ bot.on("ready", async (): Promise<void> => {
   if (guild === null) {
     return;
   }
-  const info = fetchGuild(guild);
+  const info = await fetchGuild(guild);
   if (info === undefined) {
     return;
   }

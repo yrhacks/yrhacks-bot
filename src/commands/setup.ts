@@ -1,10 +1,8 @@
 import { Channel, ColorResolvable, OverwriteData, PermissionResolvable, Role } from "discord.js";
-import fp from "lodash/fp";
-const { set } = fp;
 
 import { Command } from "../command";
 import { config, OverwriteConfig } from "../config";
-import { db, initGuild } from "../db";
+import { DbRolesInfo, DbChannelsInfo, initGuild } from "../db";
 
 const makeOverwrites = (
   overwrites: OverwriteConfig[] | undefined,
@@ -45,8 +43,6 @@ export const command: Command = {
 
     const { guild } = msg;
     const { roles, channels } = guild;
-
-    await initGuild(guild);
 
     const roleMap: Map<string, Role> = new Map();
     const channelMap: Map<string, Channel> = new Map();
@@ -112,20 +108,14 @@ export const command: Command = {
       }
     }
 
-    const rolesDb = db(`${guild.id}.roles`);
-    const channelsDb = db(`${guild.id}.channels`);
-    const writes: Array<Promise<unknown>> = [];
+    const roleIds = Array.from(roleMap.entries(), ([name, role]) => [name, role.id]);
+    const channelIds = Array.from(channelMap.entries(), ([name, channel]) => [name, channel.id]);
 
-    // kind of awkward...
-    // if all we're doing is get and set maybe this isn't
-    // the best library to use
-    for (const [name, role] of roleMap) {
-      writes.push(rolesDb.write(set(name, role.id)));
-    }
-    for (const [name, channel] of channelMap) {
-      writes.push(channelsDb.write(set(name, channel.id)));
-    }
-    await Promise.all(writes);
+    await initGuild(
+      guild,
+      Object.fromEntries(roleIds) as DbRolesInfo,
+      Object.fromEntries(channelIds) as DbChannelsInfo,
+    );
 
     // set settings
 
