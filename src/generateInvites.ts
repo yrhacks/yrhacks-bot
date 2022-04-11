@@ -1,4 +1,4 @@
-import { Client, TextChannel } from "discord.js";
+import { Client, Intents, TextChannel } from "discord.js";
 import fs from "fs";
 
 import { config, readJson, readJsonSchema } from "./config";
@@ -16,7 +16,7 @@ interface Participant {
   url: string;
 }
 
-const bot = new Client({intents: []});
+const bot = new Client({intents: [Intents.FLAGS.GUILD_INVITES]});
 
 bot.on("ready", async (): Promise<void> => {
   console.log("logged in generateInvites");
@@ -27,7 +27,6 @@ bot.on("ready", async (): Promise<void> => {
   if (data === false) {
     return;
   }
-
   const guild = bot.guilds.resolve(guildToGenerate);
   if (guild === null) {
     return;
@@ -36,14 +35,13 @@ bot.on("ready", async (): Promise<void> => {
   if (info === undefined) {
     return;
   }
-
-  const isolation = guild.channels.resolve(info.channels.isolation);
+  const isolation = await guild.channels.fetch(info.channels.isolation);
+  console.log(info.channels.isolation);
+  console.log(isolation);
   if (isolation === null) {
     return;
   }
-
   const result: { [code: string]: Participant } = { };
-
   for (const participant of data) {
     const invite = await (isolation as TextChannel).createInvite({
       maxAge: 0,
@@ -57,7 +55,6 @@ bot.on("ready", async (): Promise<void> => {
 
     console.log(participant.url, invite.code);
   }
-
   await fs.promises.writeFile(
     config.invitesFile,
     JSON.stringify(result, undefined, 2),
